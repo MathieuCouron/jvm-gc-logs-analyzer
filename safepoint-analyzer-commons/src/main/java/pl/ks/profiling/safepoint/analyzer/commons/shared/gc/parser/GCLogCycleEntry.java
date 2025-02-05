@@ -142,6 +142,14 @@ public class GCLogCycleEntry {
         fillCause();
     }
 
+    public BigDecimal getTimeMs() {
+        if (timeMs == null) {
+            System.out.println("Error getting time of GC for sequence id " + this.sequenceId + " at timestamp " + this.timeStamp);
+            return BigDecimal.ZERO;
+        }
+        return timeMs;
+    }
+
     private void fillCause() {
         int start = phase.lastIndexOf('(');
         int end = phase.lastIndexOf(')');
@@ -209,7 +217,17 @@ public class GCLogCycleEntry {
         return MIXED_COLLECTION.equals(aggregatedPhase);
     }
 
-    boolean isRemark() {
+    public boolean isRemark() {
         return phase.toLowerCase().contains(REMARK_COLLECTION);
+    }
+
+    /**
+     * Heap size may be unknown.
+     */
+    public boolean isUnknownHeapSize() {
+        if (heapSizeMb == 0 || heapAfterGCMb == 0 || heapBeforeGCMb == 0) {
+            return true;
+        }
+        return false;
     }
 }

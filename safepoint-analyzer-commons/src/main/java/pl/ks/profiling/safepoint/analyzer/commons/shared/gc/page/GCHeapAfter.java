@@ -39,7 +39,7 @@ public class GCHeapAfter implements PageCreator {
                 .anyMatch(GCLogCycleEntry::isWasToSpaceExhausted);
 
         List<PageContent> charts = new ArrayList<>(3);
-        if (hasNotGenuine) {
+        if (!hasNotGenuine) {
             charts.add(
                     Chart.builder()
                             .chartType(Chart.ChartType.LINE)
@@ -111,7 +111,13 @@ public class GCHeapAfter implements PageCreator {
     }
 
     private static Object[][] getHeapAfterGCAllCollectionsSizeChart(JvmLogFile jvmLogFile) {
-        List<GCLogCycleEntry> cyclesToShow = jvmLogFile.getGcLogFile().getCycleEntries();
+        // Not displaying GC without size series like "Pause Remark"
+        //List<GCLogCycleEntry> cyclesToShow = jvmLogFile.getGcLogFile().getCycleEntries();
+        List<GCLogCycleEntry> cyclesToShow = jvmLogFile.getGcLogFile().getCycleEntries()
+                .stream()
+                .filter(gcLogCycleEntry -> !gcLogCycleEntry.isUnknownHeapSize())
+                .collect(Collectors.toList());
+
         return PageUtils.toMatrix(cyclesToShow, chartColumns, chartExtractors);
     }
 

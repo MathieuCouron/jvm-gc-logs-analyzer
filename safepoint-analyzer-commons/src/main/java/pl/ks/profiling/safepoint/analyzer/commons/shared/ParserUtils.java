@@ -23,7 +23,12 @@ import java.math.RoundingMode;
 @UtilityClass
 public class ParserUtils {
     public BigDecimal getTimeStamp(String line) {
-        return new BigDecimal(denationalizeFloatString(getContentBetweenMarkers(line, "[", "s]")));
+        // JDK 8 - timestamp au format yyyy-mm-ddThh:mm:ss.SSS+0100: 2591798.694: (derniere partie big decimal)
+        if (line.indexOf(0) == '[') {  // JDK 9 - timestamp au format yyyy-mm-ddThh:mm:ss.SSS+0100: [2019-06-25T15:06:01.000+0100]
+            return new BigDecimal(denationalizeFloatString(getContentBetweenMarkers(line, "[", "s]")));
+        } else {
+            return new BigDecimal(denationalizeFloatString(getContentFromJdk8(line)));
+        }
     }
 
     private static String getContentBetweenMarkers(String line, String startMarker, String endMarker) {
@@ -31,6 +36,16 @@ public class ParserUtils {
         String lineUntilEndMarker = line.substring(0, endMarkerIndex);
         int startMarkerIndex = lineUntilEndMarker.lastIndexOf(startMarker);
         return line.substring(startMarkerIndex + 1, endMarkerIndex);
+    }
+
+    private static String getContentFromJdk8(String line) {
+        // tokenize with ": " separator the line
+        String[] tokens = line.split(": ");
+        // Si il n'y a pas 2 token, c'est une ligne informative
+        if (tokens.length < 2) {
+            return "0.0";
+        }
+        return tokens[1];
     }
 
     private static String denationalizeFloatString(String floatString) {
@@ -54,7 +69,7 @@ public class ParserUtils {
         return 0;
     }
 
-    public BigDecimal parseFirstBigDecimal(String line, int pos) {
+    public static BigDecimal parseFirstBigDecimal(String line, int pos) {
         boolean started = false;
         boolean dot = false;
 
@@ -82,7 +97,12 @@ public class ParserUtils {
                 }
             }
         }
-        return BigDecimal.ZERO;
+        if (started) {
+            BigDecimal ret = new BigDecimal(afterDot).divide(new BigDecimal(afterDotDivisionBy), 2, RoundingMode.HALF_DOWN);
+            return ret.add(new BigDecimal(value));
+        } else {
+            return BigDecimal.ZERO;
+        }
     }
 
     public String parseFirstHexadecimalNumber(String line, int pos) {

@@ -91,6 +91,9 @@ public class StatsService {
                 notifyProgress(logsSource, notificationConsumer, startTimestamp);
                 line = logsSource.readLine();
             }
+            // Close the last cycle
+            gcJdk8LogFileParser.endCycle();
+
 
 
             JvmLogFile jvmLogFile = new JvmLogFile();

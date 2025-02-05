@@ -20,9 +20,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+
 import lombok.Getter;
 
 public class GCLogFile {
+
     @Getter
     private List<GCLogCycleEntry> cycleEntries = new ArrayList<>();
     @Getter
@@ -35,6 +38,10 @@ public class GCLogFile {
     private GCLogConcurrentCycleEntry lastConcurrentCycle = null;
 
     private Map<Long, GCLogCycleEntry> unprocessedCycles = new HashMap<>();
+
+    GCLogCycleEntry getUnprocessedCycles(Long sequenceId) {
+        return unprocessedCycles.get(sequenceId);
+    }
 
     void newLine(Long cycleId, String line) {
         rawLogLines.computeIfAbsent(cycleId, id -> new ArrayList<>()).add(line);

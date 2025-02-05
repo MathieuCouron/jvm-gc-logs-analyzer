@@ -127,12 +127,17 @@ public class GCAllocationRateInTime implements PageCreator {
                 continue;
             }
 
-            BigDecimal rate = new BigDecimal(current.getHeapBeforeGCMb() - prev.getHeapAfterGCMb()).divide(current.getTimeStamp().subtract(prev.getTimeStamp()), 2, RoundingMode.HALF_EVEN);
+            try {
+                BigDecimal rate = new BigDecimal(current.getHeapBeforeGCMb() - prev.getHeapAfterGCMb()).divide(current.getTimeStamp().subtract(prev.getTimeStamp()), 2, RoundingMode.HALF_EVEN);
 
-            long prevCycleMinute = prev.getTimeStamp().divide(fromSecondsToMinute, 2, RoundingMode.HALF_EVEN).longValue();
-            long currentCycleMinute = current.getTimeStamp().divide(fromSecondsToMinute, 2, RoundingMode.HALF_EVEN).longValue();
-            for (long j = prevCycleMinute; j <= currentCycleMinute; j++) {
-                byTimeMap.computeIfAbsent(j, minute -> new ArrayList<>()).add(rate);
+                long prevCycleMinute = prev.getTimeStamp().divide(fromSecondsToMinute, 2, RoundingMode.HALF_EVEN).longValue();
+                long currentCycleMinute = current.getTimeStamp().divide(fromSecondsToMinute, 2, RoundingMode.HALF_EVEN).longValue();
+                for (long j = prevCycleMinute; j <= currentCycleMinute; j++) {
+                    byTimeMap.computeIfAbsent(j, minute -> new ArrayList<>()).add(rate);
+                }
+            } catch (ArithmeticException e) {
+                // nothing to do divided by 0
+                System.out.println(e);
             }
         }
         return byTimeMap;
