@@ -94,6 +94,7 @@ public class Chart implements PageContent {
         LINE,
         POINTS,
         POINTS_OR_LINE,
+        CATEGORY
     }
 
     public enum SeriesType {

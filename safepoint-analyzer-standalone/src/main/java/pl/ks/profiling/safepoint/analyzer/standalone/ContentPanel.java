@@ -110,6 +110,8 @@ class ContentPanel extends JPanel {
             case LINE:
             case POINTS:
                 return chartToImage(tmpFilePath, xChartCreator.createXyChart(chart, title, 1200));
+            case CATEGORY:
+                return chartToImage(tmpFilePath, xChartCreator.createCategoryChart(chart, title, 400));
             default:
                 return new JLabel("Unsupported chart type " + chart.getChartType());
         }

@@ -1,11 +1,7 @@
 package pl.ks.profiling.xchart.commons;
 
 import lombok.RequiredArgsConstructor;
-import org.knowm.xchart.PieChart;
-import org.knowm.xchart.PieChartBuilder;
-import org.knowm.xchart.XYChart;
-import org.knowm.xchart.XYChartBuilder;
-import org.knowm.xchart.XYSeries;
+import org.knowm.xchart.*;
 import org.knowm.xchart.style.Styler;
 import org.knowm.xchart.style.XYStyler;
 import org.knowm.xchart.style.lines.SeriesLines;
@@ -106,6 +102,27 @@ public class XChartCreator {
         return xyChart;
     }
 
+    private java.util.List<String> extractColumnHeaders(Object[][] headers) {
+        List<String> values = new ArrayList<>(headers.length);
+        for (Object[] objects : headers) {
+            if (objects[0] == null) {
+                values.add(null);
+            } else {
+                values.add(objects[0].toString());
+            }
+        }
+        return values;
+    }
+    /**
+     * Extracts a column from a table. If `skipHeader` is true, the first row
+     * will be skipped. The column is extracted as a list of numbers, with null
+     * values if the column contains non-numeric data.
+     *
+     * @param table     The table to extract from.
+     * @param columnIndex  The index of the column to extract.
+     * @param skipHeader  If true, the first row will be skipped.
+     * @return  A list of numbers, one for each row in the table.
+     */
     private java.util.List<Number> extractColumnValues(Object[][] table, int columnIndex, boolean skipHeader) {
         List<Number> values = new ArrayList<>(table.length);
         boolean skipNextRow = skipHeader;
@@ -121,5 +138,31 @@ public class XChartCreator {
             }
         }
         return values;
+    }
+
+    public CategoryChart createCategoryChart(Chart chart, String title, int width) {
+        CategoryChart categoryChart = createEmptyCategoryChart(title, width);
+        Object[][] chartRows = chart.getRows();
+        for (int serieIndex = 0; serieIndex < chartRows.length; serieIndex++) {
+            // Ajout de la serie
+            // Titre : index 0 du tableau
+            String serieTitle = (String) chart.getHeaders()[serieIndex+1];
+            categoryChart.addSeries(serieTitle, extractColumnHeaders(chartRows), extractColumnValues(chartRows, serieIndex+1, false));
+        }
+        return categoryChart;
+    }
+
+    private CategoryChart createEmptyCategoryChart(String title, int width) {
+        CategoryChart categoryChart = new CategoryChartBuilder()
+                .title(title)
+                .width(width)
+                .height(800)
+                .build();
+        categoryChart.getStyler().setSeriesColors(SERIES_COLORS);
+        categoryChart.getStyler().setLegendVisible(true);
+        categoryChart.getStyler().setChartBackgroundColor(Color.WHITE);
+        categoryChart.getStyler().setLegendFont(presentationFontProvider.getDefaultFont());
+        categoryChart.getStyler().setChartTitleFont(presentationFontProvider.getDefaultBoldFont());
+        return categoryChart;
     }
 }

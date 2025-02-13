@@ -84,16 +84,43 @@ public class GCStatsCreator {
         GCLogCycleEntry prev = null;
         GCLogCycleEntry current = null;
         BigDecimal allocation = BigDecimal.ZERO;
+        Integer initialHeapSize = Integer.valueOf(0);
+        Integer maxHeapSize = Integer.valueOf(0);
+        Integer initialHeapSizeOccupance = Integer.valueOf(0);
+        Integer maxHeapSizeOccupance = Integer.valueOf(0);
+
         for (GCLogCycleEntry cycle : gcLogFile.getCycleEntries()) {
             prev = current;
             current = cycle;
             if (prev == null) {
                 continue;
             }
+            // Total allocation
             allocation = allocation.add(new BigDecimal(current.getHeapBeforeGCMb())).subtract(new BigDecimal(prev.getHeapAfterGCMb()));
+
+            // On first cycle set initial heap size
+            if (initialHeapSize == 0 && current.getHeapSizeMb() > 0) {
+                initialHeapSize = current.getHeapSizeMb();
+            }
+            // On first cycle set the initial heap occupance (head before GC)
+            if (initialHeapSizeOccupance == 0 && current.getHeapBeforeGCMb() > 0) {
+                initialHeapSizeOccupance = current.getHeapBeforeGCMb();
+            }
+            // Set max heap size if not setted and inferior than current heap size
+            if (maxHeapSize == 0 || maxHeapSize < current.getHeapSizeMb()) {
+                maxHeapSize = current.getHeapSizeMb();
+            }
+            // Set max heap occupance if not setted and inferior than current heap occupance
+            if (maxHeapSizeOccupance == 0 || maxHeapSizeOccupance < current.getHeapBeforeGCMb()) {
+                maxHeapSizeOccupance = current.getHeapBeforeGCMb();
+            }
         }
         gcStats.setAllocationStats(new GCAllocationStats());
         gcStats.getAllocationStats().setTotalAllocation(allocation);
+        gcStats.getAllocationStats().setInitialHeapSize(initialHeapSize);
+        gcStats.getAllocationStats().setMaxHeapSize(maxHeapSize);
+        gcStats.getAllocationStats().setInitialHeapSizeOccupance(initialHeapSizeOccupance);
+        gcStats.getAllocationStats().setMaxHeapSizeOccupance(maxHeapSizeOccupance);
     }
 
     private static void generateCauseCounts(GCLogFile gcLogFile, GCStats gcStats) {
